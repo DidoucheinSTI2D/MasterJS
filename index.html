@@ -7,15 +7,21 @@
 </head>
 
 <body>
-<h1>MasterJS</h1>
-<form id="form">
-    <label for="text">Texte :</label>
-    <input type="text" id="text" placeholder="...">
-    <button type="submit">Envoyer</button>
-    <p id="error"></p>
-</form>
 
-<script src="main.js"></script>
+    <h1>MasterJS</h1>
+
+    <div id="loadingText" style="display: none;"></div>
+    <button id="cancelButton" style="display: none;">Annuler</button>
+    <div id="errorText" class="error" style="display: none;"></div>
+
+    <form id="form">
+        <input type="text" id="text" placeholder="Entrez une ville">
+        <button type="submit">Obtenir les informations météo</button>
+    </form>
+
+    <div id="weather-info"></div>
+
+    <script src="main.js"></script>
 </body>
 
 </html>

@@ -1,6 +1,9 @@
 const form = document.getElementById('form');
-const error = document.getElementById('error');
+const error = document.getElementById('errorText');
 const weatherInfo = document.getElementById('weather-info');
+const loadingText = document.getElementById("loadingText");
+const cancelButton = document.getElementById("cancelButton");
+let controller;
 
 form.addEventListener('submit', function(event) {
     event.preventDefault();
@@ -19,26 +22,53 @@ form.addEventListener('submit', function(event) {
     } else if (!/^[A-Z][a-z]*(\s+[A-Z][a-z]*)*$/.test(inputValue)) {
         showError('Chaque mot doit commencer par une majuscule, les autres caractères en minuscule.');
     } else {
-        fetchWeatherData(inputValue);
+        controller = new AbortController();
+        fetchWeatherData(inputValue, controller);
     }
 });
 
+function showLoadingText() {
+    loadingText.style.display = "block";
+    loadingText.innerText = "Chargement en cours...";
+    loadingText.classList.add("loading");
+    showCancelButton();
+}
+
+function showCancelButton() {
+    cancelButton.style.display = "inline";
+}
+
+function hideCancelButton() {
+    cancelButton.style.display = "none";
+}
+
 function showError(message) {
     error.textContent = message;
+    error.style.display = "block";
+}
+
+function hideLoadingText() {
+    loadingText.style.display = 'none';
 }
 
 function fetchWeatherData(city) {
-    const apiKey = '5b58eb3f96d0396407c0969d6094242f'; // Remplacez par votre clé d'API OpenWeatherMap
+    const apiKey = '5b58eb3f96d0396407c0969d6094242f';
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            displayWeatherData(data);
-        })
-        .catch(error => {
-            console.log('Une erreur s\'est produite lors de la récupération des données météorologiques:', error);
-        });
+    showLoadingText();
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                hideLoadingText();
+                hideCancelButton();
+                displayWeatherData(data);
+            })
+            .catch(error => {
+                hideLoadingText();
+                showError('Une erreur s\'est produite lors de la récupération des données météorologiques.');
+                console.log('Une erreur s\'est produite lors de la récupération des données météorologiques:', error);
+            });
 }
 
 function displayWeatherData(data) {
@@ -51,14 +81,23 @@ function displayWeatherData(data) {
     const sunsetTime = new Date(data.sys.sunset * 1000).toLocaleString('fr-FR');
 
     const weatherInfoHTML = `
-        <p>Condition météorologique : ${weatherDescription}</p>
-        <img src="http://openweathermap.org/img/wn/${weatherIcon}.png" alt="Weather Icon">
-        <p>Température : ${temperature} °C</p>
-        <p>Température ressentie : ${feelsLikeTemperature} °C</p>
-        <p>Date de la requête : ${currentTime}</p>
-        <p>Levé du soleil : ${sunriseTime}</p>
-        <p>Couché du soleil : ${sunsetTime}</p>
-    `;
+                <p>Condition météorologique : ${weatherDescription}</p>
+                <img src="http://openweathermap.org/img/wn/${weatherIcon}.png" alt="Weather Icon">
+                <p>Température : ${temperature} °C</p>
+                <p>Température ressentie : ${feelsLikeTemperature} °C</p>
+                <p>Date de la requête : ${currentTime}</p>
+                <p>Levé du soleil : ${sunriseTime}</p>
+                <p>Couché du soleil : ${sunsetTime}</p>
+            `;
 
     weatherInfo.innerHTML = weatherInfoHTML;
 }
+
+cancelButton.addEventListener('click', function() {
+    if (controller) {
+        controller.abort();
+        hideLoadingText();
+        hideCancelButton();
+        showError('Requête annulée.');
+    }
+});
